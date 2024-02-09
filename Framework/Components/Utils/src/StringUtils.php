@@ -28,6 +28,6 @@ readonly class StringUtils
 
     public static function isBlank(string|null $value): bool
     {
-        return empty(trim($value));
+        return $value === null || empty(trim($value));
     }
 }

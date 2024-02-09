@@ -7,7 +7,7 @@ use ReflectionClass;
 readonly class ServiceInjectionInfo
 {
     private ReflectionClass $class;
-    private string $injectionName;
+    private string|null $injectionName;
     private string $serviceAttributeClassName;
     private bool $primary;
     /** @var ConstructorInjectionArg[]  */
@@ -15,12 +15,12 @@ readonly class ServiceInjectionInfo
 
     /**
      * @param ReflectionClass $class
-     * @param string $injectionName
+     * @param string|null $injectionName
      * @param string $serviceAttributeClassName
      * @param bool $primary
      * @param ConstructorInjectionArg[] $constructorInjectionArgs
      */
-    public function __construct(ReflectionClass $class, string $injectionName, string $serviceAttributeClassName, bool $primary, array $constructorInjectionArgs)
+    public function __construct(ReflectionClass $class, string|null $injectionName, string $serviceAttributeClassName, bool $primary, array $constructorInjectionArgs)
     {
         $this->class = $class;
         $this->injectionName = $injectionName;
@@ -34,7 +34,7 @@ readonly class ServiceInjectionInfo
         return $this->class;
     }
 
-    public function getInjectionName(): string
+    public function getInjectionName(): string|null
     {
         return $this->injectionName;
     }

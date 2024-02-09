@@ -37,5 +37,25 @@ readonly class ConstructorInjectionArg
         return $this->qualifier;
     }
 
+    public function hasQualifier(): bool
+    {
+        return $this->qualifier !== null;
+    }
+
+    public function getParameterClassName(): string
+    {
+        return $this->parameter->getType()->getName();
+    }
+
+    public function hasDefaultValue(): bool
+    {
+        return $this->parameter->isDefaultValueAvailable();
+    }
+
+    public function allowsNull(): bool
+    {
+        return $this->parameter->allowsNull() || $this->parameter->getType()->allowsNull();
+    }
+
 
 }

@@ -66,6 +66,7 @@ class ServiceScanner
     /**
      * @param string $namespace
      * @return ReflectionClass[]
+     * @throws ServiceScannerException
      */
     private function scanNamespace(string $namespace): array
     {
@@ -81,6 +82,7 @@ class ServiceScanner
     /**
      * @param string $namespace
      * @return string[]
+     * @throws ServiceScannerException
      */
     private function findStartingDirectories(string $namespace): array
     {
@@ -100,25 +102,31 @@ class ServiceScanner
         throw new ServiceScannerException("Could not find any PSR-4 mapping for namespace '{$namespace}'. Was there a typo?");
     }
 
+    /**
+     * @param ReflectionClass $class
+     * @param ReflectionAttribute $serviceAttribute
+     * @return ServiceInjectionInfo
+     * @throws ServiceScannerException
+     */
     private function buildServiceInjectionInfo(ReflectionClass $class, ReflectionAttribute $serviceAttribute): ServiceInjectionInfo
     {
         $builder = new ServiceInjectionInfoBuilder();
         return $builder
             ->withClass($class)
-            ->withInjectionName($this->getInjectionName($class, $serviceAttribute))
+            ->withInjectionName($this->getInjectionName($serviceAttribute))
             ->withServiceAttributeClassName($serviceAttribute->getName())
             ->withPrimary($this->hasPrimaryAttribute($class))
             ->withConstructorArgs($this->getConstructorInjectionArgs($class))
             ->build();
     }
 
-    private function getInjectionName(ReflectionClass $class, ReflectionAttribute $serviceAttribute): string
+    private function getInjectionName(ReflectionAttribute $serviceAttribute): string|null
     {
         /** @var Service $service */
         $service = $serviceAttribute->newInstance();
 
         if (StringUtils::isBlank($service->name)) {
-            return $class->getName();
+            return null;
         }
 
         return $service->name;
@@ -134,6 +142,7 @@ class ServiceScanner
     /**
      * @param ReflectionClass $class
      * @return ConstructorInjectionArg[]
+     * @throws ServiceScannerException
      */
     private function getConstructorInjectionArgs(ReflectionClass $class): array
     {
@@ -145,6 +154,7 @@ class ServiceScanner
 
         $args = [];
         foreach ($constructor->getParameters() as $parameter) {
+            ServiceScannerValidator::validateConstructorParameterType($parameter, $class->getName());
             $args[] = $this->buildConstructorInjectionArg($parameter);
         }
         return $args;

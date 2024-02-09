@@ -12,12 +12,12 @@ use PhpBoot\Di\Attribute\Service;
 class Service2
 {
     public function __construct(
-        #[Qualifier(name: 'Service1Name')] Service1 $service1,
-        SubFolderService1 $subFolderService1,
-        #[Property(name: 'hello.world')] string $helloWorld,
-        Test|null $test1,
-        ?Test $test2 = null,
-        string $withDefault = 'withDefault'
+        #[Qualifier(name: 'Service1Name')] private Service1 $service1,
+        private SubFolderService1 $subFolderService1,
+        #[Property(name: 'hello.world')] private  string $helloWorld,
+        private Test|null $test1,
+        private ?Test $test2 = null,
+        private string $withDefault = 'withDefault'
     )
     {
 

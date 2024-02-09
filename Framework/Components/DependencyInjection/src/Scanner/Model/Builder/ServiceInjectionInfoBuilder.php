@@ -9,7 +9,7 @@ use ReflectionClass;
 class ServiceInjectionInfoBuilder
 {
     private ReflectionClass $class;
-    private string $injectionName;
+    private string|null $injectionName;
     private string $serviceAttributeClassName;
     private bool $primary = false;
     /** @var ConstructorInjectionArg[]  */
@@ -21,7 +21,7 @@ class ServiceInjectionInfoBuilder
         return $this;
     }
 
-    public function withInjectionName(string $injectionName): self
+    public function withInjectionName(string|null $injectionName): self
     {
         $this->injectionName = $injectionName;
         return $this;
