@@ -1,0 +1,22 @@
+{
+  "name": "php-boot/di",
+  "minimum-stability": "dev",
+  "require": {
+    "php": ">=8.3",
+    "php-boot/utils": "@dev"
+  },
+  "autoload": {
+    "psr-4": {
+      "PhpBoot\\Di\\": "src/"
+    }
+  },
+  "repositories": [
+    {
+      "type": "path",
+      "url": "/home/wout/Documents/PHP-Boot/Framework/Components/*",
+      "options": {
+        "useSymlink": true
+      }
+    }
+  ]
+}

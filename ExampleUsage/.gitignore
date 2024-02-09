@@ -1,0 +1,7 @@
+.idea
+cache
+logs
+vendor
+composer.lock
+*.iml
+*.iws
