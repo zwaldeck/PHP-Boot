@@ -68,6 +68,7 @@ final readonly class ServiceFactory
      */
     private static function resolveBean(ConstructorInjectionArg $arg, Map $beanMap, string $serviceClassName): mixed
     {
+        $possibleInjections = [];
         /**
          * @var string $beanClassName
          * @var Bean $bean
@@ -80,6 +81,21 @@ final readonly class ServiceFactory
             if ($arg->getParameterClassName() === $beanClassName) {
                 return $bean->getService();
             }
+
+            if (in_array($arg->getParameterClassName(), $bean->getPossibleInjectionClassNames())) {
+                $possibleInjections[] = $bean;
+            }
+        }
+
+        if (!empty($possibleInjections)) {
+            foreach ($possibleInjections as $possibleInjection) {
+                if ($possibleInjection->isPrimary()) {
+                    return $possibleInjection->getService();
+                }
+            }
+
+            $possibleInjectionsCount = count($possibleInjections);
+            throw new BeanCreationException("We found {$possibleInjectionsCount} possible injections for Bean with the type '{$arg->getParameterClassName()}' into '{$serviceClassName}'. You can specify a name or mark one of the services as a primary service.");
         }
 
         if ($arg->hasDefaultValue()) {

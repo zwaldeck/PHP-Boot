@@ -24,10 +24,10 @@ $beanMap = $serviceCreator->createServices($scannedServices);
 var_dump($beanMap);
 
 foreach ($beanMap as $className => $bean) {
-    echo "-----------------BEAN-----------------";
-    var_dump($bean);
     echo "-----------------CLASS NAME-----------------";
     var_dump($className);
+    echo "-----------------BEAN-----------------";
+    var_dump($bean);
     echo "-----------------OBJECT-----------------";
     var_dump($bean->getService());
 }

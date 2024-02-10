@@ -2,12 +2,16 @@
 
 namespace PhpBoot\Di\Inject;
 
+use ReflectionClass;
+
 readonly class Bean
 {
     private string $attributeType;
     private string|null $injectionName;
     private bool $isPrimary;
     private object $service;
+    /** @var string[]  */
+    private array $possibleInjectionClassNames;
 
     /**
      * @param string $attributeType
@@ -21,6 +25,8 @@ readonly class Bean
         $this->injectionName = $injectionName;
         $this->isPrimary = $isPrimary;
         $this->service = $service;
+
+        $this->possibleInjectionClassNames = $this->initPossibleInjectionClassNames();
     }
 
     public function getAttributeType(): string
@@ -43,7 +49,42 @@ readonly class Bean
         return $this->service;
     }
 
+    /**
+     * @return string[]
+     */
+    public function getPossibleInjectionClassNames(): array
+    {
+        return $this->possibleInjectionClassNames;
+    }
 
+    /**
+     * @return string[]
+     */
+    private function initPossibleInjectionClassNames(): array
+    {
+        $class = new ReflectionClass($this->service);
+
+        return array_merge(
+            $class->getInterfaceNames(),
+            $this->getAllParentClassNames($class)
+        );
+    }
+
+    /**
+     * @param string[] $classes
+     * @param ReflectionClass $class
+     * @return string[]
+     */
+    private function getAllParentClassNames(ReflectionClass $class, array $classes = []): array
+    {
+        $parent = $class->getParentClass();
+
+        if ($parent !== false) {
+            $classes = array_merge($classes, $this->getAllParentClassNames($class, $classes));
+        }
+
+        return $classes;
+    }
 
 
 }
