@@ -3,6 +3,7 @@
 namespace PhpBoot\Di\Inject;
 
 use PhpBoot\Di\Exception\BeanCreationException;
+use PhpBoot\Di\Exception\PropertyNotFoundException;
 use PhpBoot\Di\Scanner\Model\ConstructorInjectionArg;
 use PhpBoot\Di\Scanner\Model\ConstructorInjectionType;
 use PhpBoot\Di\Scanner\Model\ServiceInjectionInfo;
@@ -19,15 +20,16 @@ final readonly class ServiceFactory
     /**
      * @param ServiceInjectionInfo $scannedService
      * @param Map $beanMap
+     * @param PropertyRegistry $propertyRegistry
      * @return Bean
      * @throws BeanCreationException
      */
-    public static function createBean(ServiceInjectionInfo $scannedService, Map $beanMap): Bean
+    public static function createBean(ServiceInjectionInfo $scannedService, Map $beanMap, PropertyRegistry $propertyRegistry): Bean
     {
         try {
             $constructorArgs = [];
             foreach ($scannedService->getConstructorInjectionArgs() as $arg) {
-                $constructorArgs[] = self::resolveConstructorArg($arg, $beanMap, $scannedService->getClass()->getName());
+                $constructorArgs[] = self::resolveConstructorArg($arg, $beanMap, $propertyRegistry, $scannedService->getClass()->getName());
             }
 
             $object = empty($constructorArgs) ?
@@ -43,19 +45,40 @@ final readonly class ServiceFactory
     /**
      * @param ConstructorInjectionArg $arg
      * @param Map $beanMap
+     * @param PropertyRegistry $propertyRegistry
      * @param string $serviceClassName
      * @return mixed
      * @throws BeanCreationException
      * @throws ReflectionException
      */
-    private static function resolveConstructorArg(ConstructorInjectionArg $arg, Map $beanMap, string $serviceClassName): mixed
+    private static function resolveConstructorArg(
+        ConstructorInjectionArg $arg, Map $beanMap, PropertyRegistry $propertyRegistry, string $serviceClassName
+    ): mixed
     {
         if ($arg->getType() === ConstructorInjectionType::PROPERTY) {
-            // TODO: Implement property handling
-            return "";
+            return self::resolveProperty($arg, $propertyRegistry, $serviceClassName);
         }
 
         return self::resolveBean($arg, $beanMap, $serviceClassName);
+    }
+
+    /**
+     * @param ConstructorInjectionArg $arg
+     * @param PropertyRegistry $propertyRegistry
+     * @param string $serviceClassName
+     * @return string|int|bool|array
+     * @throws BeanCreationException
+     */
+    private static function resolveProperty(
+        ConstructorInjectionArg $arg, PropertyRegistry $propertyRegistry, string $serviceClassName
+    ): string|int|bool|array
+    {
+        $propertyName = $arg->getPropertyName();
+        try {
+            return $propertyRegistry->getPropertyByName($propertyName);
+        } catch (PropertyNotFoundException $e) {
+            throw new BeanCreationException("Could not find property '{$propertyName}' for injection into '{$serviceClassName}'", 0, $e);
+        }
     }
 
     /**

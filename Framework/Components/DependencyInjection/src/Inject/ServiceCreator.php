@@ -11,30 +11,39 @@ use ReflectionNamedType;
 
 class ServiceCreator
 {
-    public function createServices(array $scannedServices): Map
+    /**
+     * @param array $scannedServices
+     * @param PropertyRegistry $propertyRegistry
+     * @return Map
+     * @throws BeanCreationException
+     */
+    public function createServices(array $scannedServices, PropertyRegistry $propertyRegistry): Map
     {
         $beanMap = new Map();
         $cachedDependencies = [];
 
-        $this->createBeanMap($scannedServices, $beanMap, $cachedDependencies);
+        $this->createBeanMap($scannedServices, $propertyRegistry, $beanMap, $cachedDependencies);
 
         return $beanMap;
     }
 
     /**
      * @param ServiceInjectionInfo[] $scannedServices
+     * @param PropertyRegistry $propertyRegistry
      * @param Map<string, Bean> $beanMap
-     * @param array<string, string> $cachedDependencies
+     * @param array $cachedDependencies
      * @return void
      * @throws BeanCreationException
      */
-    private function createBeanMap(array $scannedServices, Map &$beanMap, array &$cachedDependencies): void
+    private function createBeanMap(
+        array $scannedServices, PropertyRegistry $propertyRegistry, Map &$beanMap, array &$cachedDependencies
+    ): void
     {
         foreach ($scannedServices as $key => $scannedService) {
             $dependencies = $this->getDependencies($scannedService, $cachedDependencies, $scannedServices);
 
             if ($this->areAllDependenciesResolved($beanMap->getAllKeys(), $dependencies)) {
-                $createdBean = ServiceFactory::createBean($scannedService, $beanMap);
+                $createdBean = ServiceFactory::createBean($scannedService, $beanMap, $propertyRegistry);
                 $beanMap->add($scannedService->getClass()->getName(), $createdBean);
                 unset($scannedServices[$key]);
             }
@@ -43,7 +52,7 @@ class ServiceCreator
         if (!empty($scannedServices)) {
             // TODO: On 255 times in this function, quit with an exception of circular dependencies
 
-            $this->createBeanMap($scannedServices, $beanMap, $cachedDependencies);
+            $this->createBeanMap($scannedServices, $propertyRegistry, $beanMap, $cachedDependencies);
         }
     }
 

@@ -3,6 +3,7 @@
 error_reporting(E_ALL);
 ini_set('display_errors', '1');
 
+use PhpBoot\Di\Inject\PropertyRegistry;
 use PhpBoot\Di\Inject\ServiceCreator;
 use PhpBoot\Di\Scanner\ServiceScanner;
 
@@ -17,9 +18,14 @@ $scanner = new ServiceScanner(
 );
 
 $scannedServices  = $scanner->scan();
+$propertyRegistry = new PropertyRegistry([
+    "hello" => [
+        "world" => "Hello world from property injection!"
+    ]
+]);
 
 $serviceCreator = new ServiceCreator();
-$beanMap = $serviceCreator->createServices($scannedServices);
+$beanMap = $serviceCreator->createServices($scannedServices, $propertyRegistry);
 
 var_dump($beanMap);
 

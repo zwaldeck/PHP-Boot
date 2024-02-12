@@ -2,6 +2,9 @@
 
 namespace PhpBoot\Di\Scanner\Model;
 
+use PhpBoot\Di\Attribute\Property;
+use PhpBoot\Utils\ArrayUtils;
+use ReflectionAttribute;
 use ReflectionParameter;
 
 readonly class ConstructorInjectionArg
@@ -55,6 +58,21 @@ readonly class ConstructorInjectionArg
     public function allowsNull(): bool
     {
         return $this->parameter->allowsNull() || $this->parameter->getType()->allowsNull();
+    }
+
+    public function getPropertyName(): string|null
+    {
+        if ($this->type !== ConstructorInjectionType::PROPERTY) {
+            return null;
+        }
+
+        $propertyAttributes = $this->parameter->getAttributes(Property::class, ReflectionAttribute::IS_INSTANCEOF);
+
+        if (empty($propertyAttributes)) {
+            return null;
+        }
+
+        return ArrayUtils::getFirstElement($propertyAttributes)->newInstance()->name;
     }
 
 
