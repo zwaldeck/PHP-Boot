@@ -3,6 +3,7 @@
 namespace PhpBoot\Di\Inject;
 
 use PhpBoot\Di\Exception\BeanCreationException;
+use PhpBoot\Di\Exception\CircularDependencyException;
 use PhpBoot\Di\Scanner\Model\ConstructorInjectionArg;
 use PhpBoot\Di\Scanner\Model\ConstructorInjectionType;
 use PhpBoot\Di\Scanner\Model\ServiceInjectionInfo;
@@ -11,11 +12,13 @@ use ReflectionNamedType;
 
 class ServiceCreator
 {
+    private const int MAX_LOOP_COUNT = 255;
+
     /**
      * @param array $scannedServices
      * @param PropertyRegistry $propertyRegistry
      * @return Map
-     * @throws BeanCreationException
+     * @throws BeanCreationException|CircularDependencyException
      */
     public function createServices(array $scannedServices, PropertyRegistry $propertyRegistry): Map
     {
@@ -34,9 +37,10 @@ class ServiceCreator
      * @param array $cachedDependencies
      * @return void
      * @throws BeanCreationException
+     * @throws CircularDependencyException
      */
     private function createBeanMap(
-        array $scannedServices, PropertyRegistry $propertyRegistry, Map &$beanMap, array &$cachedDependencies
+        array $scannedServices, PropertyRegistry $propertyRegistry, Map &$beanMap, array &$cachedDependencies, int &$loopCount = 0
     ): void
     {
         foreach ($scannedServices as $key => $scannedService) {
@@ -50,9 +54,12 @@ class ServiceCreator
         }
 
         if (!empty($scannedServices)) {
-            // TODO: On 255 times in this function, quit with an exception of circular dependencies
+            $loopCount++;
+            if ($loopCount > self::MAX_LOOP_COUNT) {
+                throw new CircularDependencyException("There is a circular dependency: ", $scannedServices);
+            }
 
-            $this->createBeanMap($scannedServices, $propertyRegistry, $beanMap, $cachedDependencies);
+            $this->createBeanMap($scannedServices, $propertyRegistry, $beanMap, $cachedDependencies, $loopCount);
         }
     }
 
